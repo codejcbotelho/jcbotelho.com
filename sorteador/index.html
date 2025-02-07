@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sorteio de Números</title>
+    <meta name="description" content="Sorteie números aleatórios de maneira simples e rápida. Escolha a quantidade de sorteios e o limite máximo!">
+    <meta name="keywords" content="sorteio, números aleatórios, loteria, gerador de números, sorteador online">
+    <meta name="author" content="Seu Nome">
+    <title>Sorteio de Números | JC Botelho.com</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -20,6 +23,16 @@
             margin-top: 20px;
             font-weight: bold;
         }
+        #gif-container {
+            margin-top: 20px;
+        }
+        .link {
+            margin-top: 20px;
+            display: block;
+            font-size: 18px;
+            text-decoration: none;
+            color: blue;
+        }
     </style>
 </head>
 <body>
@@ -32,8 +45,13 @@
     
     <button onclick="iniciarSorteio()">Sortear</button>
     
+    <div id="gif-container"></div>
     <div id="countdown"></div>
     <div id="result"></div>
+    
+    <audio id="audio" src="/assets/audio/transition.mp3"></audio>
+    
+    <a href="/index.html" class="link">Voltar para a página inicial</a>
 
     <script>
         function iniciarSorteio() {
@@ -41,6 +59,8 @@
             let limite = parseInt(document.getElementById('limite').value);
             let countdownElement = document.getElementById('countdown');
             let resultElement = document.getElementById('result');
+            let gifContainer = document.getElementById('gif-container');
+            let audio = document.getElementById('audio');
             
             if (isNaN(quantidade) || isNaN(limite) || quantidade < 1 || limite < 1) {
                 alert("Por favor, insira valores válidos.");
@@ -48,15 +68,21 @@
             }
             
             resultElement.innerHTML = "";
+            gifContainer.innerHTML = '<img src="/assets/images/robocop-walking.gif" width="200" alt="Contagem Regressiva">';
             let tempo = 5;
             countdownElement.innerHTML = `Sorteando em: ${tempo}s`;
+            
+            audio.play();
             
             let timer = setInterval(() => {
                 tempo--;
                 countdownElement.innerHTML = `Sorteando em: ${tempo}s`;
                 if (tempo === 0) {
                     clearInterval(timer);
+                    gifContainer.innerHTML = "";
                     countdownElement.innerHTML = "Sorteando...";
+                    audio.pause();
+                    audio.currentTime = 0;
                     realizarSorteio(quantidade, limite);
                 }
             }, 1000);
