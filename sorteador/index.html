@@ -11,49 +11,85 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            margin: 50px;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(to bottom, #121212, #1e1e1e);
+            position: relative;
+        }
+        
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+            width: 400px;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 2;
         }
         input, button {
-            margin: 10px;
+            margin: 10px 0;
             padding: 10px;
             font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
         }
         #countdown, #result {
-            font-size: 24px;
+            font-size: 20px;
             margin-top: 20px;
             font-weight: bold;
         }
         #gif-container {
             margin-top: 20px;
         }
-        .link {
-            margin-top: 20px;
-            display: block;
-            font-size: 18px;
-            text-decoration: none;
-            color: blue;
+        .mute-button {
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <h1>Sorteio de Números</h1>
-    <label for="quantidade">Quantidade de Sorteios:</label>
-    <input type="number" id="quantidade" min="1" placeholder="Ex: 2"><br>
-    
-    <label for="limite">Número Máximo:</label>
-    <input type="number" id="limite" min="1" placeholder="Ex: 10"><br>
-    
-    <button onclick="iniciarSorteio()">Sortear</button>
-    
-    <div id="gif-container"></div>
-    <div id="countdown"></div>
-    <div id="result"></div>
-    
-    <audio id="audio" src="/assets/audio/transition.mp3"></audio>
-    
-    <a href="/index.html" class="link">Voltar para a página inicial</a>
+    <div class="container">
+        <h1>Sorteio de Números</h1>
+        <label for="quantidade">Quantidade de Sorteios:</label>
+        <input type="number" id="quantidade" min="1" placeholder="Ex: 2">
+        
+        <label for="limite">Número Máximo:</label>
+        <input type="number" id="limite" min="1" max="1000000" placeholder="Ex: 10">
+        
+        <button onclick="iniciarSorteio()">Sortear</button>
+        <button class="mute-button" onclick="toggleMute()">🔊 Mutar Som</button>
+        
+        <div id="gif-container"></div>
+        <div id="countdown"></div>
+        <div id="result"></div>
+        
+        <audio id="audio" src="/assets/audio/transition.mp3"></audio>
+    </div>
 
     <script>
+        let isMuted = JSON.parse(localStorage.getItem('isMuted')) || false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('audio').muted = isMuted;
+            document.querySelector('.mute-button').textContent = isMuted ? '🔇 Som Desativado' : '🔊 Mutar Som';
+        });
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            let audio = document.getElementById('audio');
+            audio.muted = isMuted;
+            localStorage.setItem('isMuted', JSON.stringify(isMuted));
+            document.querySelector('.mute-button').textContent = isMuted ? '🔇 Som Desativado' : '🔊 Mutar Som';
+        }
+
         function iniciarSorteio() {
             let quantidade = parseInt(document.getElementById('quantidade').value);
             let limite = parseInt(document.getElementById('limite').value);
@@ -62,17 +98,27 @@
             let gifContainer = document.getElementById('gif-container');
             let audio = document.getElementById('audio');
             
-            if (isNaN(quantidade) || isNaN(limite) || quantidade < 1 || limite < 1) {
-                alert("Por favor, insira valores válidos.");
+            if (isNaN(quantidade) || isNaN(limite) || quantidade < 1 || limite < 1 || limite > 1000000) {
+                alert("Por favor, insira valores válidos. O número máximo deve ser menor que 1.000.000.");
                 return;
             }
             
             resultElement.innerHTML = "";
-            gifContainer.innerHTML = '<img src="/assets/images/robocop-walking.gif" width="200" alt="Contagem Regressiva">';
+            fetch('https://api.giphy.com/v1/gifs/random?api_key=TQAy1ybPBvEUN6mr5d4Z0xZGJzNrCZzr&tag=lottery')
+                .then(response => response.json())
+                .then(data => {
+                    gifContainer.innerHTML = `<img src="${data.data.images.original.url}" width="200" alt="Sorteando...">`;
+                })
+                .catch(() => {
+                    gifContainer.innerHTML = "<p>Não foi possível carregar o GIF</p>";
+                });
+            
             let tempo = 5;
             countdownElement.innerHTML = `Sorteando em: ${tempo}s`;
             
-            audio.play();
+            if (!isMuted) {
+                audio.play();
+            }
             
             let timer = setInterval(() => {
                 tempo--;
@@ -80,7 +126,6 @@
                 if (tempo === 0) {
                     clearInterval(timer);
                     gifContainer.innerHTML = "";
-                    countdownElement.innerHTML = "Sorteando...";
                     audio.pause();
                     audio.currentTime = 0;
                     realizarSorteio(quantidade, limite);
@@ -89,27 +134,9 @@
         }
 
         function realizarSorteio(quantidade, limite) {
-            let numerosSorteados = [];
-            while (numerosSorteados.length < quantidade) {
-                let numero = Math.floor(Math.random() * limite) + 1;
-                if (!numerosSorteados.includes(numero)) {
-                    numerosSorteados.push(numero);
-                }
-            }
-            document.getElementById('countdown').innerHTML = "";
+            let numerosSorteados = Array.from({ length: quantidade }, () => Math.floor(Math.random() * limite) + 1);
             document.getElementById('result').innerHTML = `Números sorteados: ${numerosSorteados.join(', ')}`;
         }
     </script>
-
-
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-QG7CDPJR3G"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-QG7CDPJR3G');
-</script>
 </body>
 </html>
